@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>00:00:00 - Foco</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+            color: #fff;
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            width: 400px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #a8b2d1;
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            letter-spacing: 4px;
+            margin: 20px 0;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .controls button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: rgba(255, 75, 75, 0.2) !important;
+            border-color: rgba(255, 75, 75, 0.4) !important;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 75, 75, 0.4) !important;
+        }
+
+        .db-section {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .db-section select {
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-container">
+        <h1>Tempo de Estudo</h1>
+        
+        <div class="timer-display" id="display">00:00:00</div>
+        
+        <div class="controls">
+            <button id="btn-start" onclick="iniciar()">Iniciar</button>
+            <button id="btn-pause" onclick="pausar()">Pausar</button>
+            <button id="btn-stop" onclick="finalizar()" class="btn-danger">Finalizar e Salvar</button>
+        </div>
+
+        <div class="db-section">
+            <label for="materia">Foco da Sessão:</label>
+            <select id="materia">
+                <option value="Conhecimentos Bancários">Conhecimentos Bancários</option>
+                <option value="Tecnologia da Informação">Tecnologia da Informação</option>
+                <option value="Redação ENEM">Redação ENEM</option>
+                <option value="Matemática">Matemática</option>
+                <option value="Atualidades do Mercado Financeiro">Atualidades do Mercado Financeiro</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        let tempoInicio;
+        let tempoAcumulado = 0;
+        let intervalo;
+        let rodando = false;
+
+        const display = document.getElementById('display');
+
+        function formatarTempo(ms) {
+            let segundosTotal = Math.floor(ms / 1000);
+            let horas = Math.floor(segundosTotal / 3600);
+            let minutos = Math.floor((segundosTotal % 3600) / 60);
+            let segundos = segundosTotal % 60;
+            return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+        }
+
+        function atualizarTela() {
+            const agora = Date.now();
+            const tempoDecorrido = agora - tempoInicio + tempoAcumulado;
+            const tempoFormatado = formatarTempo(tempoDecorrido);
+            display.textContent = tempoFormatado;
+            document.title = `${tempoFormatado} - Foco`; 
+        }
+
+        function iniciar() {
+            if (rodando) return;
+            rodando = true;
+            tempoInicio = Date.now();
+            intervalo = setInterval(atualizarTela, 1000);
+        }
+
+        function pausar() {
+            if (!rodando) return;
+            rodando = false;
+            clearInterval(intervalo);
+            tempoAcumulado += Date.now() - tempoInicio;
+        }
+
+        function finalizar() {
+            if (rodando) pausar();
+            if (tempoAcumulado === 0) {
+                alert("O cronómetro está zerado!");
+                return;
+            }
+
+            const materiaSelecionada = document.getElementById('materia').value;
+            const segundosEstudados = Math.floor(tempoAcumulado / 1000);
+
+            salvarNoBanco(segundosEstudados, materiaSelecionada);
+        }
+
+        // === INTEGRAÇÃO DIRETA COM O GITHUB ===
+        const GITHUB_USER = 'lauraceciliafs';
+        const GITHUB_REPO = 'con-metro';
+        const FILE_PATH = 'historico.json';
+
+        async function salvarNoBanco(segundos, materia) {
+            let token = localStorage.getItem('github_token');
+
+            if (!token) {
+                token = prompt("Insira o seu GitHub Personal Access Token (PAT):\n(O token ficará guardado em segurança apenas no seu navegador)");
+                if (token) {
+                    localStorage.setItem('github_token', token.trim());
+                } else {
+                    alert("Operação cancelada.");
+                    return;
+                }
+            }
+
+            const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+
+            try {
+                document.title = "A guardar...";
+
+                let response = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                let sha = null;
+                let historico = [];
+
+                if (response.status === 200) {
+                    const data = await response.json();
+                    sha = data.sha;
+                    const conteudoDecodificado = decodeURIComponent(atob(data.content).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    historico = JSON.parse(conteudoDecodificado);
+                } else if (response.status !== 404) {
+                    throw new Error("Erro de autenticação ou permissão. Verifique o seu Token.");
+                }
+
+                const novaSessao = {
+                    materia: materia,
+                    tempo_segundos: segundos,
+                    data: new Date().toISOString()
+                };
+                historico.push(novaSessao);
+
+                const novoConteudoBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(historico, null, 2))));
+
+                const bodyPut = {
+                    message: `Registo de estudo: ${materia} [auto]`,
+                    content: novoConteudoBase64
+                };
+                if (sha) bodyPut.sha = sha;
+
+                let responsePut = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify(bodyPut)
+                });
+
+                if (responsePut.ok) {
+                    alert(`Sessão guardada com sucesso! Matéria: ${materia}`);
+                    tempoAcumulado = 0;
+                    display.textContent = "00:00:00";
+                    document.title = "00:00:00 - Foco";
+                } else {
+                    const errData = await responsePut.json();
+                    throw new Error(errData.message || "Erro ao atualizar o repositório.");
+                }
+
+            } catch (error) {
+                console.error("Erro:", error);
+                alert(`Não foi possível guardar: ${error.message}`);
+                if (error.message.includes("credential") || error.message.includes("Token") || error.message.includes("401")) {
+                    localStorage.removeItem('github_token');
+                }
+                document.title = "Erro - Foco";
+            }
+        }
+    </script>
+</body>
+</html>
