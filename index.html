@@ -3,13 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>00:00:00 - Foco</title>
+    <title>00:00:00 - Foco Diário</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Poppins:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+
+        :root {
+            /* Variáveis padrão que podem ser alteradas pelo utilizador */
+            --bg-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070&auto=format&fit=crop');
+            --font-family: 'Poppins', sans-serif;
+            --glass-color: rgba(20, 20, 35, 0.4);
+            --text-color: #ffffff;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--font-family);
+            transition: font-family 0.3s ease;
         }
 
         body {
@@ -17,106 +28,222 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-            color: #fff;
+            background-color: #1e1e2f; /* Cor de fallback */
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+        }
+
+        /* Overlay escuro para a imagem de fundo não atrapalhar a leitura */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 0;
         }
 
         .glass-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            position: relative;
+            z-index: 1;
+            background: var(--glass-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
             padding: 40px;
             text-align: center;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            width: 400px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            width: 420px;
         }
 
         h1 {
-            font-size: 1.5rem;
-            font-weight: 400;
+            font-size: 1.8rem;
+            font-weight: 700;
             margin-bottom: 20px;
-            color: #a8b2d1;
+            letter-spacing: 1px;
         }
 
         .timer-display {
-            font-size: 4rem;
+            font-size: 4.5rem;
             font-weight: bold;
-            letter-spacing: 4px;
+            letter-spacing: 2px;
             margin: 20px 0;
             font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .controls button {
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 10px 20px;
-            margin: 5px;
-            border-radius: 8px;
+            color: var(--text-color);
+            padding: 12px 24px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1rem;
+            font-weight: bold;
             transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
-        .controls button:hover {
-            background: rgba(255, 255, 255, 0.2);
+        button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
         }
 
         .btn-danger {
             background: rgba(255, 75, 75, 0.2) !important;
             border-color: rgba(255, 75, 75, 0.4) !important;
+            width: 100%;
+            margin-top: 5px;
         }
 
         .btn-danger:hover {
-            background: rgba(255, 75, 75, 0.4) !important;
+            background: rgba(255, 75, 75, 0.5) !important;
         }
 
-        .db-section {
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        /* Botão de Configurações */
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            padding: 5px;
+        }
+
+        .settings-btn:hover {
+            transform: rotate(90deg);
+            background: transparent;
+        }
+
+        /* Modal de Configurações */
+        .settings-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .settings-content {
+            background: rgba(30, 30, 40, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            width: 350px;
             text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .db-section select {
+        .settings-content h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
             padding: 10px;
             border-radius: 8px;
-            background: rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             color: white;
             outline: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            padding: 10px 15px;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
+    <div class="overlay"></div>
+
+    <button class="settings-btn" onclick="abrirConfig()">⚙️</button>
+
     <div class="glass-container">
-        <h1>Tempo de Estudo</h1>
+        <h1>Foco Diário</h1>
         
         <div class="timer-display" id="display">00:00:00</div>
         
         <div class="controls">
             <button id="btn-start" onclick="iniciar()">Iniciar</button>
             <button id="btn-pause" onclick="pausar()">Pausar</button>
+            <button id="btn-reset" onclick="reiniciar()">Reiniciar</button>
             <button id="btn-stop" onclick="finalizar()" class="btn-danger">Finalizar e Salvar</button>
         </div>
+    </div>
 
-        <div class="db-section">
-            <label for="materia">Foco da Sessão:</label>
-            <select id="materia">
-                <option value="Conhecimentos Bancários">Conhecimentos Bancários</option>
-                <option value="Tecnologia da Informação">Tecnologia da Informação</option>
-                <option value="Redação ENEM">Redação ENEM</option>
-                <option value="Matemática">Matemática</option>
-                <option value="Atualidades do Mercado Financeiro">Atualidades do Mercado Financeiro</option>
-            </select>
+    <!-- Painel de Configurações -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <h2>Personalizar</h2>
+            
+            <div class="input-group">
+                <label>Link da Imagem de Fundo:</label>
+                <input type="text" id="bg-url" placeholder="Ex: https://site.com/imagem.jpg">
+            </div>
+
+            <div class="input-group">
+                <label>Estilo da Fonte:</label>
+                <select id="font-select">
+                    <option value="'Poppins', sans-serif">Poppins (Moderna)</option>
+                    <option value="'Inter', sans-serif">Inter (Limpa)</option>
+                    <option value="'Roboto Mono', monospace">Roboto Mono (Digital)</option>
+                    <option value="Georgia, serif">Georgia (Clássica)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Cor do Vidro (Fundo do Timer):</label>
+                <input type="color" id="glass-color" value="#141423">
+            </div>
+
+            <div class="modal-actions">
+                <button onclick="fecharConfig()">Cancelar</button>
+                <button onclick="salvarConfiguracoes()" style="background: rgba(75, 255, 100, 0.2);">Salvar</button>
+            </div>
         </div>
     </div>
 
     <script>
+        // === LÓGICA DO CRONÓMETRO ===
         let tempoInicio;
         let tempoAcumulado = 0;
         let intervalo;
@@ -154,6 +281,15 @@
             tempoAcumulado += Date.now() - tempoInicio;
         }
 
+        function reiniciar() {
+            if (rodando) pausar();
+            if (confirm("Tem a certeza que deseja zerar o cronómetro sem guardar?")) {
+                tempoAcumulado = 0;
+                display.textContent = "00:00:00";
+                document.title = "00:00:00 - Foco Diário";
+            }
+        }
+
         function finalizar() {
             if (rodando) pausar();
             if (tempoAcumulado === 0) {
@@ -161,40 +297,75 @@
                 return;
             }
 
-            const materiaSelecionada = document.getElementById('materia').value;
             const segundosEstudados = Math.floor(tempoAcumulado / 1000);
-
-            salvarNoBanco(segundosEstudados, materiaSelecionada);
+            salvarNoBancoGitHub(segundosEstudados);
         }
 
-        // === INTEGRAÇÃO DIRETA COM O GITHUB ===
+        // === PERSONALIZAÇÃO (CORES, FONTES, IMAGENS) ===
+        function carregarConfiguracoes() {
+            const configSalva = JSON.parse(localStorage.getItem('timer_config'));
+            if (configSalva) {
+                if (configSalva.bg) document.documentElement.style.setProperty('--bg-image', `url('${configSalva.bg}')`);
+                if (configSalva.font) document.documentElement.style.setProperty('--font-family', configSalva.font);
+                if (configSalva.color) {
+                    // Transforma a cor HEX num RGBA com transparência para manter o efeito de vidro
+                    const hex = configSalva.color;
+                    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+                    document.documentElement.style.setProperty('--glass-color', `rgba(${r}, ${g}, ${b}, 0.5)`);
+                    document.getElementById('glass-color').value = hex;
+                }
+                
+                document.getElementById('bg-url').value = configSalva.bg || '';
+                document.getElementById('font-select').value = configSalva.font || "'Poppins', sans-serif";
+            }
+        }
+
+        function abrirConfig() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.style.opacity = '1', 10);
+        }
+
+        function fecharConfig() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function salvarConfiguracoes() {
+            const bg = document.getElementById('bg-url').value;
+            const font = document.getElementById('font-select').value;
+            const color = document.getElementById('glass-color').value;
+
+            const config = { bg, font, color };
+            localStorage.setItem('timer_config', JSON.stringify(config));
+            carregarConfiguracoes();
+            fecharConfig();
+        }
+
+        // Carrega o visual salvo ao abrir a página
+        window.onload = carregarConfiguracoes;
+
+        // === INTEGRAÇÃO COM O GITHUB ===
         const GITHUB_USER = 'lauraceciliafs';
         const GITHUB_REPO = 'con-metro';
         const FILE_PATH = 'historico.json';
 
-        async function salvarNoBanco(segundos, materia) {
+        async function salvarNoBancoGitHub(segundos) {
             let token = localStorage.getItem('github_token');
 
             if (!token) {
-                token = prompt("Insira o seu GitHub Personal Access Token (PAT):\n(O token ficará guardado em segurança apenas no seu navegador)");
-                if (token) {
-                    localStorage.setItem('github_token', token.trim());
-                } else {
-                    alert("Operação cancelada.");
-                    return;
-                }
+                token = prompt("Insira o seu GitHub Personal Access Token (PAT):");
+                if (token) localStorage.setItem('github_token', token.trim());
+                else return;
             }
 
             const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
 
             try {
                 document.title = "A guardar...";
-
                 let response = await fetch(url, {
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
 
                 let sha = null;
@@ -203,56 +374,32 @@
                 if (response.status === 200) {
                     const data = await response.json();
                     sha = data.sha;
-                    const conteudoDecodificado = decodeURIComponent(atob(data.content).split('').map(function(c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
-                    historico = JSON.parse(conteudoDecodificado);
-                } else if (response.status !== 404) {
-                    throw new Error("Erro de autenticação ou permissão. Verifique o seu Token.");
+                    const decodificado = decodeURIComponent(atob(data.content).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                    historico = JSON.parse(decodificado);
                 }
 
-                const novaSessao = {
-                    materia: materia,
-                    tempo_segundos: segundos,
-                    data: new Date().toISOString()
-                };
-                historico.push(novaSessao);
+                historico.push({ tempo_segundos: segundos, data: new Date().toISOString() });
 
-                const novoConteudoBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(historico, null, 2))));
-
-                const bodyPut = {
-                    message: `Registo de estudo: ${materia} [auto]`,
-                    content: novoConteudoBase64
-                };
+                const conteudoBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(historico, null, 2))));
+                const bodyPut = { message: `Registo de estudo diário [auto]`, content: conteudoBase64 };
                 if (sha) bodyPut.sha = sha;
 
-                let responsePut = await fetch(url, {
+                let resPut = await fetch(url, {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify(bodyPut)
                 });
 
-                if (responsePut.ok) {
-                    alert(`Sessão guardada com sucesso! Matéria: ${materia}`);
+                if (resPut.ok) {
+                    alert("Sessão guardada com sucesso!");
                     tempoAcumulado = 0;
                     display.textContent = "00:00:00";
-                    document.title = "00:00:00 - Foco";
+                    document.title = "00:00:00 - Foco Diário";
                 } else {
-                    const errData = await responsePut.json();
-                    throw new Error(errData.message || "Erro ao atualizar o repositório.");
+                    throw new Error("Erro ao salvar.");
                 }
-
-            } catch (error) {
-                console.error("Erro:", error);
-                alert(`Não foi possível guardar: ${error.message}`);
-                if (error.message.includes("credential") || error.message.includes("Token") || error.message.includes("401")) {
-                    localStorage.removeItem('github_token');
-                }
-                document.title = "Erro - Foco";
+            } catch (erro) {
+                alert(`Erro: ${erro.message}`);
             }
         }
     </script>
