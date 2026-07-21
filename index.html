@@ -3,258 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>00:00:00 - Foco</title>
+    <title>Aesthetic Chronometer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --bg-glass: rgba(255, 255, 255, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.4);
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --accent: #4f46e5;
+            --accent-glow: rgba(79, 70, 229, 0.3);
+            --danger: #ff6b6b;
+            --success: #10b981;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-glass: rgba(26, 32, 44, 0.75);
+                --border-glass: rgba(255, 255, 255, 0.08);
+                --text-main: #f7fafc;
+                --text-muted: #a0aec0;
+                --accent: #818cf8;
+                --accent-glow: rgba(129, 140, 248, 0.25);
+            }
         }
 
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-            color: #fff;
+            margin: 0; padding: 20px; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; background: var(--bg-glass);
+            background-color: #1a202c;
+            box-sizing: border-box;
         }
 
-        .glass-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px;
+        .crono-widget {
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-glass);
+            border-radius: 36px;
+            padding: 45px 35px;
+            width: 100%;
+            max-width: 380px;
             text-align: center;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            width: 400px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.3);
+            position: relative;
+            overflow: hidden;
         }
 
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 400;
-            margin-bottom: 20px;
-            color: #a8b2d1;
+        .crono-widget::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+            opacity: 0; transition: opacity 0.6s ease; z-index: 0; pointer-events: none;
+        }
+        .crono-widget.running::before { opacity: 1; animation: pulse 4s infinite alternate; }
+
+        @keyframes pulse { 0% { transform: scale(0.95); } 100% { transform: scale(1.05); } }
+
+        .input-group {
+            position: relative; z-index: 1;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-bottom: 35px;
         }
 
-        .timer-display {
-            font-size: 4rem;
-            font-weight: bold;
-            letter-spacing: 4px;
-            margin: 20px 0;
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-        }
-
-        .controls button {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 10px 20px;
-            margin: 5px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .controls button:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-danger {
-            background: rgba(255, 75, 75, 0.2) !important;
-            border-color: rgba(255, 75, 75, 0.4) !important;
-        }
-
-        .btn-danger:hover {
-            background: rgba(255, 75, 75, 0.4) !important;
-        }
-
-        .db-section {
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            text-align: left;
-        }
-
-        .db-section select {
-            padding: 10px;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
+        .subject-input {
+            background: rgba(125,125,125,0.08);
+            border: 1px solid rgba(125,125,125,0.2);
+            color: var(--text-main);
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            width: 180px;
             outline: none;
+            text-align: center;
+            transition: all 0.3s;
         }
+        .subject-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); width: 210px; }
+
+        .color-picker-wrapper {
+            width: 42px; height: 42px; border-radius: 14px; overflow: hidden;
+            border: 1px solid rgba(125,125,125,0.2); cursor: pointer; flex-shrink: 0;
+        }
+        .color-picker-wrapper input {
+            width: 60px; height: 60px; border: none; padding: 0; margin: -10px; cursor: pointer; background: transparent;
+        }
+
+        .display-wrapper { position: relative; z-index: 1; margin: 20px 0 45px 0; }
+        
+        .time-display {
+            font-family: 'Playfair Display', serif;
+            font-size: 4.8rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -2px;
+            transition: color 0.3s ease;
+        }
+        
+        .crono-widget.running .time-display { color: var(--accent); }
+
+        .controls {
+            position: relative; z-index: 1;
+            display: flex; justify-content: center; align-items: center; gap: 14px;
+        }
+
+        .btn {
+            background: var(--text-main);
+            color: var(--bg-glass);
+            border: none;
+            border-radius: 24px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .btn-play { padding: 16px 36px; flex-grow: 1; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .btn-play:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.2); }
+        .btn-play:active { transform: translateY(1px); }
+
+        .btn-reset {
+            width: 54px; height: 54px; border-radius: 18px;
+            background: transparent; border: 2px solid rgba(125,125,125,0.25);
+            color: var(--text-muted); font-size: 1.4rem;
+        }
+        .btn-reset:hover { border-color: var(--text-main); color: var(--text-main); transform: rotate(15deg); }
+
+        .sync-dot {
+            position: absolute; top: 20px; right: 20px; width: 8px; height: 8px;
+            border-radius: 50%; background: var(--text-muted); opacity: 0.3; transition: all 0.3s;
+        }
+        .sync-dot.syncing { background: var(--accent); opacity: 1; animation: blink 1s infinite; }
+        .sync-dot.success { background: var(--success); opacity: 1; }
+        @keyframes blink { 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
-    <div class="glass-container">
-        <h1>Tempo de Estudo</h1>
-        
-        <div class="timer-display" id="display">00:00:00</div>
-        
-        <div class="controls">
-            <button id="btn-start" onclick="iniciar()">Iniciar</button>
-            <button id="btn-pause" onclick="pausar()">Pausar</button>
-            <button id="btn-stop" onclick="finalizar()" class="btn-danger">Finalizar e Salvar</button>
+
+    <div class="crono-widget" id="widget">
+        <div class="sync-dot" id="sync-dot" title="Status da Nuvem"></div>
+
+        <div class="input-group">
+            <input type="text" id="subj-input" class="subject-input" placeholder="Matéria..." value="Conhecimentos Bancários">
+            <div class="color-picker-wrapper">
+                <input type="color" id="color-input" value="#4f46e5" onchange="updateThemeColor(this.value)">
+            </div>
         </div>
 
-        <div class="db-section">
-            <label for="materia">Foco da Sessão:</label>
-            <select id="materia">
-                <option value="Conhecimentos Bancários">Conhecimentos Bancários</option>
-                <option value="Tecnologia da Informação">Tecnologia da Informação</option>
-                <option value="Redação ENEM">Redação ENEM</option>
-                <option value="Matemática">Matemática</option>
-                <option value="Atualidades do Mercado Financeiro">Atualidades do Mercado Financeiro</option>
-            </select>
+        <div class="display-wrapper">
+            <h1 class="time-display" id="display">00:00:00</h1>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-play" id="btn-play" onclick="toggleTimer()">Iniciar</button>
+            <button class="btn btn-reset" onclick="resetTimer()" title="Salvar e Zerar">↻</button>
         </div>
     </div>
 
     <script>
-        let tempoInicio;
-        let tempoAcumulado = 0;
-        let intervalo;
-        let rodando = false;
+        const urlParams = new URLSearchParams(window.location.search);
+        const widgetId = urlParams.get('id') || '';
+        function getKey(name) { return 'pomodoro' + name + (widgetId ? '_' + widgetId : ''); }
 
         const display = document.getElementById('display');
+        const btnPlay = document.getElementById('btn-play');
+        const widget = document.getElementById('widget');
+        const subjInput = document.getElementById('subj-input');
+        const colorInput = document.getElementById('color-input');
+        const syncDot = document.getElementById('sync-dot');
 
-        function formatarTempo(ms) {
-            let segundosTotal = Math.floor(ms / 1000);
-            let horas = Math.floor(segundosTotal / 3600);
-            let minutos = Math.floor((segundosTotal % 3600) / 60);
-            let segundos = segundosTotal % 60;
-            return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+        let isRunning = false;
+        let timeCurrent = 0;
+        let startTimeAbsolute = 0;
+        let worker = null;
+
+        function updateThemeColor(color) {
+            document.documentElement.style.setProperty('--accent', color);
+            let hex = color.replace('#', '');
+            let r = parseInt(hex.substring(0,2), 16), g = parseInt(hex.substring(2,4), 16), b = parseInt(hex.substring(4,6), 16);
+            document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.35)`);
         }
 
-        function atualizarTela() {
-            const agora = Date.now();
-            const tempoDecorrido = agora - tempoInicio + tempoAcumulado;
-            const tempoFormatado = formatarTempo(tempoDecorrido);
-            display.textContent = tempoFormatado;
-            document.title = `${tempoFormatado} - Foco`; 
+        function setupWorker() {
+            const code = `let intv; self.onmessage = e => { if(e.data==='start') intv=setInterval(()=>postMessage('tick'),1000); else clearInterval(intv); }`;
+            worker = new Worker(URL.createObjectURL(new Blob([code], { type: 'application/javascript' })));
+            worker.onmessage = () => {
+                timeCurrent = Math.floor((Date.now() - startTimeAbsolute) / 1000);
+                updateDisplay();
+                saveState();
+            };
         }
 
-        function iniciar() {
-            if (rodando) return;
-            rodando = true;
-            tempoInicio = Date.now();
-            intervalo = setInterval(atualizarTela, 1000);
-        }
-
-        function pausar() {
-            if (!rodando) return;
-            rodando = false;
-            clearInterval(intervalo);
-            tempoAcumulado += Date.now() - tempoInicio;
-        }
-
-        function finalizar() {
-            if (rodando) pausar();
-            if (tempoAcumulado === 0) {
-                alert("O cronómetro está zerado!");
-                return;
+        function toggleTimer() {
+            if (isRunning) {
+                worker.postMessage('stop');
+                btnPlay.textContent = 'Retomar';
+                widget.classList.remove('running');
+            } else {
+                startTimeAbsolute = Date.now() - (timeCurrent * 1000);
+                worker.postMessage('start');
+                btnPlay.textContent = 'Pausar';
+                widget.classList.add('running');
             }
-
-            const materiaSelecionada = document.getElementById('materia').value;
-            const segundosEstudados = Math.floor(tempoAcumulado / 1000);
-
-            salvarNoBanco(segundosEstudados, materiaSelecionada);
+            isRunning = !isRunning;
+            saveState();
         }
 
-        // === INTEGRAÇÃO DIRETA COM O GITHUB ===
-        const GITHUB_USER = 'lauraceciliafs';
-        const GITHUB_REPO = 'con-metro';
-        const FILE_PATH = 'historico.json';
+        function resetTimer() {
+            if(isRunning) toggleTimer();
+            if(timeCurrent >= 1) {
+                saveToHistory();
+                btnPlay.textContent = '✅ Salvo!';
+                setTimeout(() => { btnPlay.textContent = 'Iniciar'; }, 2000);
+            } else {
+                btnPlay.textContent = 'Iniciar';
+            }
+            timeCurrent = 0;
+            updateDisplay();
+            saveState();
+        }
 
-        async function salvarNoBanco(segundos, materia) {
-            let token = localStorage.getItem('github_token');
+        function updateDisplay() {
+            const h = Math.floor(timeCurrent / 3600).toString().padStart(2, '0');
+            const m = Math.floor((timeCurrent % 3600) / 60).toString().padStart(2, '0');
+            const s = (timeCurrent % 60).toString().padStart(2, '0');
+            
+            if (h === '00') {
+                display.textContent = `${m}:${s}`;
+                display.style.fontSize = '5.2rem';
+            } else {
+                display.textContent = `${h}:${m}:${s}`;
+                display.style.fontSize = '4.2rem';
+            }
+        }
 
-            if (!token) {
-                token = prompt("Insira o seu GitHub Personal Access Token (PAT):\n(O token ficará guardado em segurança apenas no seu navegador)");
-                if (token) {
-                    localStorage.setItem('github_token', token.trim());
-                } else {
-                    alert("Operação cancelada.");
-                    return;
+        function saveState() {
+            const state = { isRunning, timeCurrent, startTimeAbsolute, subj: subjInput.value, color: colorInput.value };
+            localStorage.setItem(getKey('StandaloneCronoState'), JSON.stringify(state));
+        }
+
+        function saveToHistory() {
+            const subject = subjInput.value.trim() || 'Estudo Geral';
+            const color = colorInput.value;
+            const dateStr = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+            
+            let history = JSON.parse(localStorage.getItem(getKey('History'))) || {};
+            if (!history[dateStr]) history[dateStr] = {};
+            if (!history[dateStr][subject]) history[dateStr][subject] = { minutes: 0, color: color };
+            
+            let minsToAdd = Math.round(timeCurrent / 60);
+            if (minsToAdd < 1) minsToAdd = 1; 
+            
+            history[dateStr][subject].minutes += minsToAdd;
+            localStorage.setItem(getKey('History'), JSON.stringify(history));
+            
+            triggerCloudSync();
+        }
+
+        async function triggerCloudSync() {
+            const binId = localStorage.getItem(getKey('BinId'));
+            const apiKey = localStorage.getItem(getKey('MasterKey'));
+            if (!binId || !apiKey) return;
+
+            syncDot.className = 'sync-dot syncing';
+            
+            const payload = {
+                queue: JSON.parse(localStorage.getItem(getKey('Queue'))) || [],
+                history: JSON.parse(localStorage.getItem(getKey('History'))) || {},
+                settings: {
+                    bgUrl: localStorage.getItem(getKey('BgUrl')) || '',
+                    audioUrl: localStorage.getItem(getKey('AudioUrl')) || '',
+                    textColor: localStorage.getItem(getKey('TextColor')) || '#37352f',
+                    bgColor: localStorage.getItem(getKey('BgColor')) || '#ffffff',
+                    bgOpacity: localStorage.getItem(getKey('BgOpacity')) || '0.85',
+                    shortBreakColor: localStorage.getItem(getKey('ShortBreakColor')) || '#8ce99a',
+                    longBreakColor: localStorage.getItem(getKey('LongBreakColor')) || '#74c0fc',
+                    fontText: localStorage.getItem(getKey('FontText')) || "'Plus Jakarta Sans', sans-serif",
+                    fontTimer: localStorage.getItem(getKey('FontTimer')) || "'Playfair Display', serif",
+                    breakShort: localStorage.getItem(getKey('BreakShort')) || '5',
+                    breakLong: localStorage.getItem(getKey('BreakLong')) || '15',
+                    examName: localStorage.getItem(getKey('ExamName')) || '',
+                    examDate: localStorage.getItem(getKey('ExamDate')) || ''
                 }
-            }
-
-            const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+            };
 
             try {
-                document.title = "A guardar...";
-
-                let response = await fetch(url, {
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
+                await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey }, body: JSON.stringify(payload)
                 });
-
-                let sha = null;
-                let historico = [];
-
-                if (response.status === 200) {
-                    const data = await response.json();
-                    sha = data.sha;
-                    const conteudoDecodificado = decodeURIComponent(atob(data.content).split('').map(function(c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
-                    historico = JSON.parse(conteudoDecodificado);
-                } else if (response.status !== 404) {
-                    throw new Error("Erro de autenticação ou permissão. Verifique o seu Token.");
-                }
-
-                const novaSessao = {
-                    materia: materia,
-                    tempo_segundos: segundos,
-                    data: new Date().toISOString()
-                };
-                historico.push(novaSessao);
-
-                const novoConteudoBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(historico, null, 2))));
-
-                const bodyPut = {
-                    message: `Registo de estudo: ${materia} [auto]`,
-                    content: novoConteudoBase64
-                };
-                if (sha) bodyPut.sha = sha;
-
-                let responsePut = await fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify(bodyPut)
-                });
-
-                if (responsePut.ok) {
-                    alert(`Sessão guardada com sucesso! Matéria: ${materia}`);
-                    tempoAcumulado = 0;
-                    display.textContent = "00:00:00";
-                    document.title = "00:00:00 - Foco";
-                } else {
-                    const errData = await responsePut.json();
-                    throw new Error(errData.message || "Erro ao atualizar o repositório.");
-                }
-
-            } catch (error) {
-                console.error("Erro:", error);
-                alert(`Não foi possível guardar: ${error.message}`);
-                if (error.message.includes("credential") || error.message.includes("Token") || error.message.includes("401")) {
-                    localStorage.removeItem('github_token');
-                }
-                document.title = "Erro - Foco";
+                syncDot.className = 'sync-dot success';
+                setTimeout(() => { syncDot.className = 'sync-dot'; }, 3000);
+            } catch (error) { 
+                syncDot.className = 'sync-dot'; 
             }
         }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isRunning) {
+                timeCurrent = Math.floor((Date.now() - startTimeAbsolute) / 1000);
+                updateDisplay();
+            }
+        });
+
+        window.onload = () => {
+            setupWorker();
+            updateThemeColor(colorInput.value);
+
+            const saved = JSON.parse(localStorage.getItem(getKey('StandaloneCronoState')));
+            if (saved) {
+                if(saved.subj) subjInput.value = saved.subj;
+                if(saved.color) { colorInput.value = saved.color; updateThemeColor(saved.color); }
+                timeCurrent = saved.timeCurrent || 0;
+                
+                if (saved.isRunning) {
+                    isRunning = true;
+                    startTimeAbsolute = saved.startTimeAbsolute;
+                    timeCurrent = Math.floor((Date.now() - startTimeAbsolute) / 1000);
+                    worker.postMessage('start');
+                    btnPlay.textContent = 'Pausar';
+                    widget.classList.add('running');
+                }
+                updateDisplay();
+            }
+        };
     </script>
 </body>
 </html>
